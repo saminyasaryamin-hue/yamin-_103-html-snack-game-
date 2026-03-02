@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snack Attack - Cookie Dodge</title>
+    <style>
+        body {
+            background-color: #2c3e50;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            overflow: hidden;
+        }
+        canvas {
+            border: 4px solid #ecf0f1;
+            background-color: #34495e;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            margin-top: 20px;
+        }
+        .stats {
+            margin-top: 10px;
+            font-size: 24px;
+        }
+        .controls {
+            margin-top: 10px;
+            color: #bdc3c7;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🍪 Snack Attack!</h1>
+    <div class="stats">Score: <span id="score">0</span></div>
+    <canvas id="gameCanvas" width="400" height="500"></canvas>
+    <div class="controls">Use <b>Left & Right Arrows</b> or <b>A & D</b> to move</div>
+
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const scoreElement = document.getElementById("score");
+
+        // Game Constants
+        const cookieSize = 40;
+        const mouthSize = 35;
+        
+        // Game State
+        let cookieX = canvas.width / 2 - cookieSize / 2;
+        let score = 0;
+        let gameOver = false;
+        let mouths = [];
+        let keys = {};
+
+        // Input Handling
+        window.addEventListener("keydown", (e) => keys[e.code] = true);
+        window.addEventListener("keyup", (e) => keys[e.code] = false);
+
+        function spawnMouth() {
+            if (Math.random() < 0.05) { // Spawn rate
+                mouths.push({
+                    x: Math.random() * (canvas.width - mouthSize),
+                    y: -mouthSize,
+                    speed: 3 + Math.random() * 4
+                });
+            }
+        }
+
+        function update() {
+            if (gameOver) return;
+
+            // Move Cookie
+            if ((keys["ArrowLeft"] || keys["KeyA"]) && cookieX > 0) {
+                cookieX -= 7;
+            }
+            if ((keys["ArrowRight"] || keys["KeyD"]) && cookieX < canvas.width - cookieSize) {
+                cookieX += 7;
+            }
+
+            // Update Mouths
+            for (let i = 0; i < mouths.length; i++) {
+                let m = mouths[i];
+                m.y += m.speed;
+
+                // Collision Detection
+                if (
+                    m.y + mouthSize > canvas.height - cookieSize &&
+                    m.x < cookieX + cookieSize &&
+                    m.x + mouthSize > cookieX
+                ) {
+                    gameOver = true;
+                    alert("GAME OVER! The snack was eaten! Score: " + score);
+                    location.reload(); // Restart
+                }
+
+                // Score points for dodging
+                if (m.y > canvas.height) {
+                    mouths.splice(i, 1);
+                    score++;
+                    scoreElement.innerText = score;
+                    i--;
+                }
+            }
+            spawnMouth();
+        }
+
+        function draw() {
+            // Clear Canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw Cookie (The Snack Player)
+            ctx.font = "40px Arial";
+            ctx.fillText("🍪", cookieX, canvas.height - 10);
+
+            // Draw Mouths (The Enemies)
+            ctx.font = "35px Arial";
+            mouths.forEach(m => {
+                ctx.fillText("👄", m.x, m.y);
+            });
+
+            if (!gameOver) {
+                update();
+                requestAnimationFrame(draw);
+            }
+        }
+
+        draw();
+    </script>
+</body>
+</html>
