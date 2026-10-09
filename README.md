@@ -1,1 +1,1 @@
-https://wah-gif-6m2f.pagedrop.io
+http://127.0.0.1:5500/
